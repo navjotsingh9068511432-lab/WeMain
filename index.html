@@ -1,0 +1,662 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}</style>
+</head>
+<body>
+<title>WeMain</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="theme-color" content="#14262a">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&display=swap">
+<style>
+/* Layout: one-column phone app — status card, big travel switch, tabbed panels (Home · Talk · Safety · Setup · Privacy) */
+:root{
+  --bg:#f6f1ec; --surface:#fffdfb; --ink:#14262a; --muted:#5e6b6c; --line:#e3dbd3;
+  --accent:#d9603f; --accent-ink:#ffffff; --calm:#2f7d6d; --calm-soft:#dcefe9;
+  --warn:#c98a1e; --warn-soft:#fbf0d9; --danger:#c8322b; --danger-soft:#fbe3df;
+  --bubble-me:#14262a; --bubble-me-ink:#f6f1ec; --bubble-ai:#efe7df;
+  --display:"Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --body:"DM Sans", "Helvetica Neue", Arial, system-ui, sans-serif;
+  --r:18px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f1c1f; --surface:#162a2e; --ink:#eef1ee; --muted:#9fb0ae; --line:#26403f;
+  --accent:#ef7a57; --accent-ink:#1a0f0b; --calm:#5fbfa9; --calm-soft:#173a34;
+  --warn:#e6b04a; --warn-soft:#3a2f17; --danger:#f0675e; --danger-soft:#3d1c1a;
+  --bubble-me:#eef1ee; --bubble-me-ink:#0f1c1f; --bubble-ai:#1e3539; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1c1f; --surface:#162a2e; --ink:#eef1ee; --muted:#9fb0ae; --line:#26403f;
+  --accent:#ef7a57; --accent-ink:#1a0f0b; --calm:#5fbfa9; --calm-soft:#173a34;
+  --warn:#e6b04a; --warn-soft:#3a2f17; --danger:#f0675e; --danger-soft:#3d1c1a;
+  --bubble-me:#eef1ee; --bubble-me-ink:#0f1c1f; --bubble-ai:#1e3539; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.app{max-width:480px;margin:0 auto;padding-block:14px 110px;display:flex;flex-direction:column;gap:14px}
+h1,h2,h3{font-family:var(--display);margin:0;text-wrap:balance;letter-spacing:-.01em}
+h1{font-size:28px;font-weight:800}
+h2{font-size:20px;font-weight:700}
+h3{font-size:16px;font-weight:700}
+p{margin:0}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.label{font-size:11.5px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:700}
+header.top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.brand{display:flex;align-items:baseline;gap:8px}
+.brand b{font-family:var(--display);font-size:26px;font-weight:800;letter-spacing:-.02em}
+.brand b span{color:var(--accent)}
+.tag{font-size:12px;color:var(--muted)}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:var(--surface);border:1px solid var(--line);white-space:nowrap}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.pill.on .dot{background:var(--calm);box-shadow:0 0 0 4px var(--calm-soft);animation:pulse 1.6s infinite}
+.pill.alert{background:var(--danger-soft);border-color:var(--danger);color:var(--danger)}
+.pill.alert .dot{background:var(--danger)}
+@keyframes pulse{50%{box-shadow:0 0 0 8px transparent}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;gap:10px}
+.notice{border-radius:14px;padding:10px 12px;font-size:13px;background:var(--warn-soft);color:var(--ink);border:1px solid color-mix(in srgb,var(--warn) 40%,transparent)}
+.hero{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:center}
+.avatar{width:58px;height:58px;border-radius:50%;background:var(--ink);color:var(--bg);display:grid;place-items:center;font-family:var(--display);font-weight:800;font-size:24px;position:relative}
+.avatar::after{content:"";position:absolute;inset:-5px;border-radius:50%;border:2px solid var(--accent);opacity:.0}
+.listening .avatar::after{opacity:1;animation:ring 2s infinite}
+@keyframes ring{0%{transform:scale(.95);opacity:.9}100%{transform:scale(1.25);opacity:0}}
+.travel{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px;border-radius:var(--r);background:var(--ink);color:var(--bg)}
+.travel h2{color:var(--bg)}
+.travel p{color:color-mix(in srgb,var(--bg) 75%,transparent);font-size:13px}
+.switch{appearance:none;width:64px;height:36px;border-radius:999px;background:color-mix(in srgb,var(--bg) 25%,transparent);position:relative;cursor:pointer;flex:none;border:0}
+.switch::before{content:"";position:absolute;top:4px;left:4px;width:28px;height:28px;border-radius:50%;background:var(--bg);transition:transform .2s}
+.switch:checked{background:var(--accent)}
+.switch:checked::before{transform:translateX(28px)}
+.switch:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat{background:var(--bg);border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.stat b{font-family:var(--display);font-size:18px;font-variant-numeric:tabular-nums}
+button{font:inherit;cursor:pointer;border:0;border-radius:14px;padding:12px 14px;font-weight:700}
+.btn{background:var(--accent);color:var(--accent-ink)}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.btn.calm{background:var(--calm);color:#fff}
+.btn.danger{background:var(--danger);color:#fff}
+.btn.wide{width:100%}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.row>*{flex:1 1 140px}
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--surface);border-top:1px solid var(--line);
+  padding:8px max(10px,env(safe-area-inset-right,0px)) calc(8px + env(safe-area-inset-bottom,0px)) max(10px,env(safe-area-inset-left,0px))}
+nav.tabs .in{max-width:480px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
+nav.tabs button{background:transparent;color:var(--muted);padding:8px 2px;font-size:12px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:3px;border-radius:12px}
+nav.tabs button svg{width:22px;height:22px}
+nav.tabs button[aria-selected="true"]{color:var(--ink);background:var(--bg)}
+.chat{display:flex;flex-direction:column;gap:8px;min-height:260px;max-height:52vh;overflow-y:auto;padding:4px 2px}
+.msg{max-width:84%;padding:10px 13px;border-radius:18px;white-space:pre-wrap;overflow-wrap:anywhere}
+.msg.me{align-self:flex-end;background:var(--bubble-me);color:var(--bubble-me-ink);border-bottom-right-radius:6px}
+.msg.ai{align-self:flex-start;background:var(--bubble-ai);border-bottom-left-radius:6px}
+.msg.sys{align-self:center;background:transparent;color:var(--muted);font-size:12.5px;text-align:center;max-width:95%}
+.composer{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center}
+.composer input{min-width:0}
+.mic{width:46px;height:46px;border-radius:50%;padding:0;display:grid;place-items:center;background:var(--ink);color:var(--bg)}
+.mic.rec{background:var(--danger);color:#fff;animation:pulse 1.2s infinite}
+.mic svg{width:22px;height:22px}
+input,select,textarea{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:11px 12px;width:100%}
+.field{display:flex;flex-direction:column;gap:5px}
+.field small{color:var(--muted);font-size:12.5px}
+.modes{display:flex;gap:6px}
+.modes button{flex:1;background:var(--bg);color:var(--muted);border:1px solid var(--line);padding:9px}
+.modes button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.ladder{display:flex;flex-direction:column;gap:8px}
+.step{display:grid;grid-template-columns:34px 1fr;gap:10px;align-items:start;padding:10px;border-radius:14px;border:1px solid var(--line);background:var(--bg)}
+.step i{font-style:normal;width:34px;height:34px;border-radius:10px;display:grid;place-items:center;font-family:var(--display);font-weight:800;background:var(--surface);border:1px solid var(--line)}
+.step.active{border-color:var(--danger);background:var(--danger-soft)}
+.step.active i{background:var(--danger);color:#fff;border-color:var(--danger)}
+.step.done i{background:var(--calm);color:#fff;border-color:var(--calm)}
+.overlay{position:fixed;inset:0;z-index:40;background:color-mix(in srgb,var(--ink) 55%,transparent);display:grid;place-items:end center;padding:16px max(16px,env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.sheet{width:100%;max-width:480px;background:var(--surface);border-radius:22px;padding:18px;display:flex;flex-direction:column;gap:12px;max-height:88vh;overflow-y:auto}
+.sheet.danger{border:2px solid var(--danger)}
+.count{font-family:var(--display);font-size:46px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--danger);line-height:1}
+.contact{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:14px;background:var(--bg)}
+.contact b{display:block}
+.contact code,.mono{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:12.5px;overflow-wrap:anywhere}
+.alertbox{background:var(--bg);border:1px dashed var(--line);border-radius:14px;padding:12px;font-size:13px;white-space:pre-wrap;overflow-wrap:anywhere}
+.crisis{background:var(--calm-soft);border:1px solid var(--calm);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:6px}
+.crisis b{font-family:var(--display);font-size:22px}
+.log{display:flex;flex-direction:column;gap:6px;font-size:13px;max-height:180px;overflow-y:auto}
+.log div{display:grid;grid-template-columns:auto 1fr;gap:8px}
+.log time{color:var(--muted);font-variant-numeric:tabular-nums}
+ul.clean{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px}
+.panel[hidden]{display:none!important}
+</style>
+
+<div class="app" id="app">
+  <header class="top">
+    <div class="brand"><b>We<span>Main</span></b><span class="tag">be the main character</span></div>
+    <span class="pill" id="statusPill"><span class="dot"></span><span id="statusText">Idle</span></span>
+  </header>
+
+  <div class="notice" id="envNotice" hidden></div>
+
+  <!-- HOME -->
+  <section class="panel" id="p-home" role="tabpanel">
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="card hero" id="heroCard">
+        <div class="avatar" id="avatar">S</div>
+        <div style="min-width:0">
+          <h2 id="heroTitle">Hi, I'm Sassy.</h2>
+          <p class="muted small" id="heroSub">Turn on travel mode when you head out. I'll keep you company and listen for your code word.</p>
+        </div>
+      </div>
+
+      <div class="travel">
+        <div>
+          <h2>Travel mode</h2>
+          <p id="travelSub">Off. Nothing is listening.</p>
+        </div>
+        <input type="checkbox" class="switch" id="travelSwitch" aria-label="Travel mode">
+      </div>
+
+      <div class="card">
+        <div class="label">Right now</div>
+        <div class="grid2">
+          <div class="stat"><span class="small muted">Listening for</span><b id="statWord">“pineapple”</b></div>
+          <div class="stat"><span class="small muted">5-min memory</span><b id="statBuffer">0:00</b></div>
+          <div class="stat"><span class="small muted">Location</span><b id="statLoc">Off</b></div>
+          <div class="stat"><span class="small muted">Expected home</span><b id="statHome">9:30 pm</b></div>
+        </div>
+        <p class="small muted" id="heardLine">Say “Hey <span class="cname">Sassy</span>” to talk, or your code word if you're unsafe.</p>
+      </div>
+
+      <div class="card">
+        <div class="label">Try it</div>
+        <div class="row">
+          <button class="btn calm" id="btnTalk">Talk to <span class="cname">Sassy</span></button>
+          <button class="btn ghost" id="btnLow">I'm feeling low</button>
+        </div>
+        <div class="field">
+          <label class="small muted" for="sayBox">No mic here? Type what you'd say out loud:</label>
+          <div class="composer" style="grid-template-columns:1fr auto">
+            <input id="sayBox" placeholder="e.g. hey sassy, I'm walking to the bus">
+            <button class="btn" id="sayBtn">Say</button>
+          </div>
+        </div>
+        <button class="btn ghost" id="btnLate">Simulate: running late on an unusual route</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- TALK -->
+  <section class="panel" id="p-talk" role="tabpanel" hidden>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+        <h2>Talk to <span class="cname">Sassy</span></h2>
+        <button class="btn ghost small" id="btnSpeak" style="padding:7px 10px;font-size:12px">Voice replies: on</button>
+      </div>
+      <div class="modes" role="group" aria-label="Conversation mode">
+        <button id="modeCompanion" aria-pressed="true">Company</button>
+        <button id="modeMood" aria-pressed="false">Feeling low</button>
+      </div>
+      <div class="chat" id="chat" aria-live="polite"></div>
+      <div class="composer">
+        <button class="mic" id="micBtn" aria-label="Speak">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+        </button>
+        <input id="chatInput" placeholder="Type a message" autocomplete="off">
+        <button class="btn" id="sendBtn">Send</button>
+      </div>
+      <p class="small muted" id="aiNote">Supportive companion, not a therapist. In a crisis in Canada, call or text 9-8-8.</p>
+    </div>
+  </section>
+
+  <!-- SAFETY -->
+  <section class="panel" id="p-safety" role="tabpanel" hidden>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="card">
+        <h2>How help arrives</h2>
+        <p class="small muted">No buttons needed. <span class="cname">Sassy</span> moves up these levels on her own.</p>
+        <div class="ladder" id="ladder">
+          <div class="step" data-l="1"><i>1</i><div><h3>Quiet check-in</h3><p class="small muted">Something looks off. <span class="cname">Sassy</span> asks if you're okay and waits 30 seconds.</p></div></div>
+          <div class="step" data-l="2"><i>2</i><div><h3>Alert your people</h3><p class="small muted">Live location, a summary and the last 5 minutes of audio go to your trusted contacts.</p></div></div>
+          <div class="step" data-l="3"><i>3</i><div><h3>Emergency help</h3><p class="small muted">A professional monitoring partner contacts police with your location. Coming in the Android app.</p></div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="label">Test the flow</div>
+        <div class="row">
+          <button class="btn danger" id="btnCode">Say code word</button>
+          <button class="btn ghost" id="btnCheck">Start a check-in</button>
+        </div>
+        <p class="small muted">The duress word makes <span class="cname">Sassy</span> look cancelled while the alert keeps going.</p>
+      </div>
+      <div class="card">
+        <div class="label">Activity this session</div>
+        <div class="log" id="log"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SETUP -->
+  <section class="panel" id="p-setup" role="tabpanel" hidden>
+    <div class="card">
+      <h2>Make it yours</h2>
+      <div class="field"><label for="fName">Companion's name</label><input id="fName"><small>Also the wake word: “Hey <span class="cname">Sassy</span>”.</small></div>
+      <div class="field"><label for="fUser">Your first name</label><input id="fUser"></div>
+      <div class="field"><label for="fStyle">Personality</label>
+        <select id="fStyle"><option value="warm">Warm and caring</option><option value="sassy">Bold and sassy</option><option value="calm">Calm and gentle</option><option value="desi">Desi didi, mixes Punjabi/Hindi</option></select></div>
+      <div class="field"><label for="fVoice">Voice</label>
+        <select id="fVoice"></select>
+        <div class="row"><button class="btn ghost" id="testVoice" type="button">Hear this voice</button></div>
+        <small>Voices marked “Natural”, “Neural” or “Google” sound most human. The phone and Android versions add lifelike AI voices.</small></div>
+      <div class="field"><label for="fElKey">Lifelike voice key (ElevenLabs, phone version)</label>
+        <input id="fElKey" type="password" autocomplete="off" placeholder="Paste your ElevenLabs API key">
+        <input id="fElVoice" autocomplete="off" placeholder="Voice ID (optional)">
+        <small>Stored on this phone only. Not used inside the Claude preview.</small></div>
+      <div class="field"><label for="fCode">Code word (I'm unsafe)</label><input id="fCode"><small>Pick a normal word you'd never say by accident.</small></div>
+      <div class="field"><label for="fDuress">Duress phrase (fake cancel)</label><input id="fDuress"><small>If forced to cancel, say this. The alert keeps going silently.</small></div>
+      <div class="field"><label for="fHome">Usually home by</label><input id="fHome" type="time"></div>
+      <div class="field"><label for="fLang">Talk in</label>
+        <select id="fLang"><option value="English">English</option><option value="Punjabi">Punjabi</option><option value="Hindi">Hindi</option><option value="Hinglish">Hinglish</option></select></div>
+      <h3 style="margin-top:6px">Trusted contacts</h3>
+      <div id="contacts" style="display:flex;flex-direction:column;gap:8px"></div>
+      <div class="grid2">
+        <input id="cName" placeholder="Name">
+        <input id="cPhone" placeholder="Phone" inputmode="tel">
+      </div>
+      <button class="btn ghost" id="addContact">Add contact</button>
+      <button class="btn" id="saveSetup">Save</button>
+      <p class="small muted" id="saveNote"></p>
+    </div>
+  </section>
+
+  <!-- PRIVACY -->
+  <section class="panel" id="p-privacy" role="tabpanel" hidden>
+    <div class="card">
+      <h2>What WeMain keeps</h2>
+      <ul class="clean">
+        <li><b>Audio:</b> a 5-minute loop held in memory only. Older audio is overwritten. Nothing is saved or uploaded. <span class="muted" id="bufInfo"></span></li>
+        <li><b>Location:</b> used live during travel mode. Shared only inside an alert.</li>
+        <li><b>Your settings:</b> name, words and contacts, stored on this phone only.</li>
+        <li><b>Chats:</b> kept on screen for this session, then cleared.</li>
+      </ul>
+      <div class="notice small">Prototype note: in this web version, speech-to-text uses your browser's built-in recognizer. The Android app will listen fully on the phone.</div>
+      <button class="btn ghost" id="wipe">Delete everything on this phone</button>
+      <p class="small muted" id="wipeNote"></p>
+    </div>
+  </section>
+</div>
+
+<nav class="tabs" aria-label="Sections">
+  <div class="in" role="tablist">
+    <button role="tab" data-tab="home" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Home</button>
+    <button role="tab" data-tab="talk" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>Talk</button>
+    <button role="tab" data-tab="safety" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/></svg>Safety</button>
+    <button role="tab" data-tab="setup" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Setup</button>
+    <button role="tab" data-tab="privacy" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Privacy</button>
+  </div>
+</nav>
+
+<div class="overlay" id="overlay" hidden><div class="sheet" id="sheet"></div></div>
+
+<script>
+(() => {
+"use strict";
+const $ = id => document.getElementById(id);
+const DEMO_LOC = {lat: 42.9849, lng: -81.2453, demo: true}; // London, ON
+
+/* ---------- settings (this device only) ---------- */
+const DEFAULTS = {name:"Sassy", user:"Simran", style:"warm", code:"pineapple", duress:"blue umbrella", home:"21:30", lang:"English",
+  contacts:[{name:"Mom (example)", phone:"+1 519 555 0142"},{name:"Navjot (example)", phone:"+1 519 555 0188"}], apiKey:""};
+let S = Object.assign({}, DEFAULTS);
+try { const raw = localStorage.getItem("wemain.settings"); if (raw) S = Object.assign(S, JSON.parse(raw)); } catch(e){}
+function persist(){ try { localStorage.setItem("wemain.settings", JSON.stringify(S)); return true; } catch(e){ return false; } }
+
+/* ---------- state ---------- */
+const st = { travel:false, mode:"companion", speak:true, level:0, duress:false, loc:null, locWatch:null,
+  rec:null, recWanted:false, conv:false, segments:[], recorder:null, segTimer:null, stream:null, wake:null,
+  turns:[], checkTimer:null, aiBusy:false };
+const env = {
+  sr: window.SpeechRecognition || window.webkitSpeechRecognition || null,
+  tts: "speechSynthesis" in window,
+  framed: window.top !== window.self,
+  sample: null,
+  micOK: null, geoOK: null
+};
+
+/* ---------- helpers ---------- */
+function fmtTime(d){ return d.toLocaleTimeString([], {hour:"numeric", minute:"2-digit"}); }
+function fmtHome(v){ if(!v) return "—"; const [h,m]=v.split(":").map(Number); const d=new Date(); d.setHours(h,m,0,0); return fmtTime(d).toLowerCase(); }
+function esc(s){ const d=document.createElement("div"); d.textContent=s; return d.innerHTML; }
+function norm(s){ return (s||"").toLowerCase().replace(/[^\p{L}\p{N}\s]/gu," ").replace(/\s+/g," ").trim(); }
+function has(text, phrase){ const p=norm(phrase); return p && (" "+norm(text)+" ").includes(" "+p+" "); }
+function log(msg, kind){ const el=$("log"); const row=document.createElement("div"); row.innerHTML=`<time>${fmtTime(new Date())}</time><span></span>`; row.lastChild.textContent=msg; if(kind==="danger") row.style.color="var(--danger)"; el.prepend(row); }
+function setStatus(text, cls){ const p=$("statusPill"); p.className="pill"+(cls?" "+cls:""); $("statusText").textContent=text; }
+function applyNames(){
+  document.querySelectorAll(".cname").forEach(e=>e.textContent=S.name);
+  $("avatar").textContent=(S.name||"S").trim().charAt(0).toUpperCase();
+  $("heroTitle").textContent=`Hi ${S.user}, I'm ${S.name}.`;
+  $("statWord").textContent=`“${S.code}”`;
+  $("statHome").textContent=fmtHome(S.home);
+  $("sayBox").placeholder=`e.g. hey ${S.name.toLowerCase()}, I'm walking to the bus`;
+}
+
+/* ---------- tabs ---------- */
+function showTab(t){
+  document.querySelectorAll("nav.tabs button").forEach(b=>b.setAttribute("aria-selected", String(b.dataset.tab===t)));
+  document.querySelectorAll(".panel").forEach(p=>p.hidden = p.id!=="p-"+t);
+  try{ sessionStorage.setItem("wemain.tab", t);}catch(e){}
+  if(t==="talk") setTimeout(()=>$("chat").scrollTop=1e9,0);
+}
+document.querySelectorAll("nav.tabs button").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.tab)));
+
+/* ---------- speech out (tone-aware) ---------- */
+// tone: bright (normal chat) · warm · soft (low mood / crisis) · concerned (check-in) · urgent (danger)
+const TONES={ bright:{rate:1.06,pitch:1.12, stab:.35, style:.55}, warm:{rate:1.0,pitch:1.05, stab:.45, style:.45},
+  soft:{rate:.9,pitch:.96, stab:.6, style:.3}, concerned:{rate:.97,pitch:1.0, stab:.5, style:.4}, urgent:{rate:1.15,pitch:1.02, stab:.55, style:.6} };
+let audioEl=null;
+function pickVoice(){
+  const vs=env.tts?speechSynthesis.getVoices():[]; if(!vs.length) return null;
+  if(S.voice){ const v=vs.find(v=>v.name===S.voice); if(v) return v; }
+  const langPref = S.lang==="Hindi"||S.lang==="Hinglish" ? /hi[-_]IN/i : S.lang==="Punjabi" ? /pa[-_]IN|hi[-_]IN/i : /en/i;
+  const score=v=>(/natural|neural|online/i.test(v.name)?4:0)+(/google/i.test(v.name)?3:0)+(/female|aria|jenny|samantha|zira|sonia|libby|neerja|swara|heera/i.test(v.name)?2:0)+(langPref.test(v.lang)?3:0);
+  return vs.slice().sort((a,b)=>score(b)-score(a))[0];
+}
+async function speakEleven(text, t){
+  const voice=S.elVoice||"21m00Tcm4TlvDq8ikWAM";
+  const res=await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(voice)}?output_format=mp3_44100_128`,{method:"POST",
+    headers:{"xi-api-key":S.elKey,"content-type":"application/json","accept":"audio/mpeg"},
+    body:JSON.stringify({text, model_id:"eleven_multilingual_v2", voice_settings:{stability:t.stab, similarity_boost:.8, style:t.style, use_speaker_boost:true, speed:Math.min(1.15,Math.max(.85,t.rate))}})});
+  if(!res.ok) throw new Error("tts "+res.status);
+  const url=URL.createObjectURL(await res.blob());
+  if(audioEl){ audioEl.pause(); }
+  audioEl=new Audio(url); audioEl.onended=()=>URL.revokeObjectURL(url); await audioEl.play();
+}
+function speak(text, tone){
+  if(!st.speak || !text) return;
+  text=text.replace(/\[[A-Z]+\]/g,"").trim(); if(!text) return;
+  const t=TONES[tone||"warm"]||TONES.warm;
+  if(S.elKey && !env.framed){ speakEleven(text,t).catch(()=>speakBrowser(text,t)); return; }
+  speakBrowser(text,t);
+}
+function speakBrowser(text,t){
+  if(!env.tts) return;
+  try{ speechSynthesis.cancel();
+    // split into sentences so pauses and pitch feel more natural
+    const parts=text.match(/[^.!?…]+[.!?…]*/g)||[text]; const v=pickVoice();
+    parts.forEach((p,i)=>{ const u=new SpeechSynthesisUtterance(p.trim()); if(v){ u.voice=v; u.lang=v.lang; }
+      const q=/\?$/.test(p.trim()); const ex=/!$/.test(p.trim());
+      u.rate=t.rate*(i===0?1:0.98); u.pitch=t.pitch+(q?.08:0)+(ex?.06:0); speechSynthesis.speak(u); });
+  }catch(e){}
+}
+function fillVoices(){
+  const sel=$("fVoice"); if(!sel) return; const vs=env.tts?speechSynthesis.getVoices():[];
+  sel.innerHTML=""; const auto=document.createElement("option"); auto.value=""; auto.textContent="Best available (automatic)"; sel.appendChild(auto);
+  vs.slice().sort((a,b)=>a.lang.localeCompare(b.lang)||a.name.localeCompare(b.name)).forEach(v=>{ const o=document.createElement("option"); o.value=v.name; o.textContent=`${v.name} (${v.lang})`; sel.appendChild(o); });
+  sel.value=S.voice||"";
+}
+
+/* ---------- chat ---------- */
+function bubble(role, text){ const el=document.createElement("div"); el.className="msg "+role; el.textContent=text; $("chat").appendChild(el); $("chat").scrollTop=1e9; return el; }
+function crisisCard(){ const el=document.createElement("div"); el.className="crisis"; el.innerHTML=`<span class="label">You don't have to go through this alone</span><b>Call or text 9-8-8</b><span class="small">Suicide Crisis Helpline, Canada. Free, 24/7. Outside Canada, contact your local emergency number or crisis line.</span>`; $("chat").appendChild(el); $("chat").scrollTop=1e9; }
+
+const CRISIS = ["kill myself","end my life","suicide","want to die","hurt myself","self harm","no reason to live","better off dead"];
+const DANGER_HINTS = ["following me","someone is following","scared","he grabbed","help me","unsafe","stalking","won't let me go"];
+
+function rules(){
+  const styles={warm:"warm, caring and encouraging, like a close friend",sassy:"bold, witty and confident, a little sassy but always kind",calm:"calm, gentle and grounding",desi:"a warm desi big sister (didi), naturally mixing a few Punjabi/Hindi words in Roman script"};
+  return `You are ${S.name}, a personal AI companion inside the WeMain app, talking with ${S.user}, a woman who may be travelling alone. Your personality: ${styles[S.style]||styles.warm}. Reply in ${S.lang} (Punjabi or Hindi in Roman script unless she writes in Gurmukhi/Devanagari).
+Current mode: ${st.mode==="mood"?"MOOD SUPPORT: she is feeling low. Listen first, validate, ask one gentle question, offer one small grounding or motivating idea. Never diagnose or give medical advice. Encourage reaching out to people she trusts.":"COMPANY: keep her company while she travels, light and attentive, and check she's okay."}
+Travel mode is ${st.travel?"ON":"OFF"}. Her code word for danger is handled by the app; never repeat it aloud.
+Keep every reply to 1-3 short sentences: it is read aloud.
+Begin EVERY reply with exactly one tag: [OK] normally; [CHECK] if something sounds possibly unsafe; [DANGER] if she says she is in danger, being followed, attacked or asks for help; [CRISIS] if she mentions suicide, self-harm or not wanting to live (then respond with warmth, tell her she matters, and urge her to call or text 9-8-8 in Canada or her local crisis line right now, and to reach someone she trusts).`;
+}
+
+function fallbackReply(text){
+  const t=norm(text);
+  if(CRISIS.some(k=>t.includes(k))) return `[CRISIS] I'm really glad you told me, ${S.user}. You matter, and you deserve support right now. Please call or text 9-8-8, and reach out to someone you trust. I'm staying right here with you.`;
+  if(DANGER_HINTS.some(k=>t.includes(k))) return `[DANGER] I'm with you. Stay where there are people and lights. I'm alerting your trusted contacts now.`;
+  if(st.mode==="mood") return `[OK] That sounds heavy, and it makes sense you feel this way. Want to take three slow breaths with me, then tell me one small thing that went okay today?`;
+  if(/\b(hi|hey|hello)\b/.test(t)) return `[OK] Hey ${S.user}! I'm right here. Where are you headed?`;
+  if(/bus|train|walk|uber|cab|station|home/.test(t)) return `[OK] Got it. I'll keep you company the whole way. Tell me when you're on board, and I'll check in if anything looks off.`;
+  return `[OK] I'm listening, ${S.user}. Tell me more, I'm with you.`;
+}
+
+async function askAI(userText){
+  st.turns.push({role:"user", content:userText});
+  if(st.turns.length>16) st.turns=st.turns.slice(-16);
+  const el=bubble("ai","Thinking…");
+  let reply="";
+  try{
+    if(env.sample){
+      const input=[{role:"user",content:rules()}, ...st.turns];
+      const r=await env.sample(input,{cache:false, modelTier:"quick", onText:({text})=>{ el.textContent=text.replace(/^\s*\[[A-Z]+\]\s*/,""); $("chat").scrollTop=1e9; }});
+      reply=r.text;
+    } else if(S.apiKey && !env.framed){
+      const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"content-type":"application/json","x-api-key":S.apiKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
+        body:JSON.stringify({model:"claude-haiku-5-5",max_tokens:200,system:rules(),messages:st.turns})});
+      if(!res.ok) throw {code:"http_"+res.status};
+      const j=await res.json(); reply=(j.content||[]).map(c=>c.text||"").join("");
+    } else { await new Promise(r=>setTimeout(r,500)); reply=fallbackReply(userText); }
+  }catch(e){
+    if(e && e.code==="not_granted"){ env.sample=null; }
+    reply=fallbackReply(userText);
+  }
+  const m=reply.match(/^\s*\[([A-Z]+)\]\s*/); const tag=m?m[1]:"OK"; const clean=reply.replace(/^\s*\[[A-Z]+\]\s*/,"").trim();
+  el.textContent=clean||"I'm here.";
+  st.turns.push({role:"assistant", content:clean||"I'm here."});
+  speak(clean, tag==="DANGER"?"urgent":tag==="CRISIS"?"soft":tag==="CHECK"?"concerned":st.mode==="mood"?"soft":"bright");
+  if(tag==="CRISIS"){ crisisCard(); log("Crisis support shared (9-8-8)"); }
+  if(tag==="DANGER"){ log("Danger words heard in conversation","danger"); escalate(2,"She told "+S.name+" she's in danger"); }
+  else if(tag==="CHECK"){ startCheckIn("Something she said sounded off"); }
+  return tag;
+}
+
+async function send(text){
+  text=(text||"").trim(); if(!text) return;
+  if(handleSafetyWords(text)) return;
+  bubble("me",text);
+  if(st.aiBusy) return; st.aiBusy=true;
+  try{ await askAI(text);} finally{ st.aiBusy=false; }
+}
+$("sendBtn").addEventListener("click",()=>{ const v=$("chatInput").value; $("chatInput").value=""; send(v); });
+$("chatInput").addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); $("sendBtn").click(); }});
+function setMode(m){ st.mode=m; $("modeCompanion").setAttribute("aria-pressed",String(m==="companion")); $("modeMood").setAttribute("aria-pressed",String(m==="mood")); }
+$("modeCompanion").addEventListener("click",()=>setMode("companion"));
+$("modeMood").addEventListener("click",()=>{ setMode("mood"); if(!$("chat").querySelector(".msg.ai.mood")){ const b=bubble("ai",`I'm here, ${S.user}. No rush. What's weighing on you?`); b.classList.add("mood"); speak(b.textContent);} });
+$("btnSpeak").addEventListener("click",()=>{ st.speak=!st.speak; $("btnSpeak").textContent="Voice replies: "+(st.speak?"on":"off"); if(!st.speak&&env.tts) speechSynthesis.cancel(); });
+
+/* ---------- safety words (checked before anything else) ---------- */
+function handleSafetyWords(text){
+  if(has(text,S.duress)){
+    st.duress=true; log("Duress phrase heard: showing fake cancel, alert continues silently","danger");
+    if(st.level<2) escalate(2,"Duress phrase used", true);
+    closeSheet(); setStatus("Idle"); bubble("sys","Check-in cancelled."); return true;
+  }
+  if(has(text,S.code)){ log("Code word heard","danger"); escalate(2,"Code word spoken"); return true; }
+  if(st.checkTimer && /\b(i m ok|im ok|i am ok|okay|fine|all good|safe)\b/.test(norm(text))){ resolveCheck(); return true; }
+  return false;
+}
+
+/* ---------- check-in & escalation ---------- */
+function ladderUI(){ document.querySelectorAll(".step").forEach(s=>{ const l=+s.dataset.l; s.classList.toggle("active", l===st.level); s.classList.toggle("done", l<st.level); }); }
+function startCheckIn(reason){
+  if(st.level>=1 && st.checkTimer) return;
+  st.level=1; ladderUI(); setStatus("Checking in","alert"); log("Check-in started: "+reason);
+  let n=30; const line=`${S.user}, are you okay? Say “I'm okay”, or your code word if you're not.`;
+  speak(line,"concerned");
+  openSheet(`<span class="label">Level 1 · check-in</span><h2>${esc(S.name)} is checking on you</h2><p class="muted small">${esc(reason)}</p><p>${esc(line)}</p><div class="count" id="cd">30</div><p class="small muted">No answer in 30 seconds sends an alert to your trusted contacts.</p><div class="row"><button class="btn calm" id="okBtn">I'm okay</button><button class="btn danger" id="helpBtn">Not okay</button></div>`, false);
+  $("okBtn").onclick=resolveCheck; $("helpBtn").onclick=()=>escalate(2,"She answered “not okay”");
+  st.checkTimer=setInterval(()=>{ n--; const c=$("cd"); if(c) c.textContent=n; if(n<=0){ clearInterval(st.checkTimer); st.checkTimer=null; escalate(2,"No answer to check-in"); } },1000);
+}
+function resolveCheck(){ if(st.checkTimer){ clearInterval(st.checkTimer); st.checkTimer=null; } st.level=0; ladderUI(); closeSheet(); setStatus(st.travel?"Travel mode":"Idle", st.travel?"on":""); log("She confirmed she's okay"); speak("Okay, glad you're safe. I'm still here."); }
+
+function alertText(reason){
+  const L=st.loc||DEMO_LOC; const url=`https://maps.google.com/?q=${L.lat.toFixed(5)},${L.lng.toFixed(5)}`;
+  const secs=Math.min(300, st.segments.length*30);
+  return `WeMain ALERT: ${S.user} may be unsafe.\nReason: ${reason}\nTime: ${fmtTime(new Date())}\nLive location: ${url}${L.demo?" (demo location)":""}\nAudio: last ${Math.floor(secs/60)}:${String(secs%60).padStart(2,"0")} kept for you.\nPlease call her now. If you can't reach her, call 911.`;
+}
+function escalate(level, reason, silent){
+  if(st.checkTimer){ clearInterval(st.checkTimer); st.checkTimer=null; }
+  st.level=Math.max(st.level,level); ladderUI(); log("Level 2: alerting trusted contacts — "+reason,"danger");
+  const msg=alertText(reason);
+  if(silent){ setStatus("Idle"); return; }
+  setStatus("Alert active","alert");
+  const contacts=(S.contacts||[]).map((c,i)=>`<div class="contact"><div><b>${esc(c.name)}</b><code>${esc(c.phone)}</code></div><a class="btn" style="text-decoration:none;padding:9px 12px" href="sms:${encodeURIComponent(c.phone.replace(/[^\d+]/g,""))}?body=${encodeURIComponent(msg)}" target="_blank" rel="noopener">Text</a></div>`).join("") || `<p class="small muted">No contacts yet. Add them in Setup.</p>`;
+  openSheet(`<span class="label" style="color:var(--danger)">Level 2 · alert</span><h2>Alerting your people</h2><p class="small muted">${esc(reason)}</p><div class="alertbox" id="alertMsg"></div><div style="display:flex;flex-direction:column;gap:8px">${contacts}</div><div class="row"><button class="btn ghost" id="copyAlert">Copy alert</button><button class="btn danger" id="lvl3">Level 3: emergency</button></div><p class="small muted">Web prototype: “Text” opens your messages app with the alert ready to send. The Android app sends it automatically.</p><button class="btn ghost wide" id="safeNow">I'm safe now</button>`, true);
+  $("alertMsg").textContent=msg;
+  $("copyAlert").onclick=async()=>{ try{ await navigator.clipboard.writeText(msg); $("copyAlert").textContent="Copied"; }catch(e){ const r=document.createRange(); r.selectNodeContents($("alertMsg")); const s=getSelection(); s.removeAllRanges(); s.addRange(r); $("copyAlert").textContent="Selected, copy it"; } };
+  $("lvl3").onclick=()=>{ st.level=3; ladderUI(); log("Level 3 requested: monitoring partner would contact police","danger"); $("lvl3").textContent="Partner notified (demo)"; $("lvl3").disabled=true; };
+  $("safeNow").onclick=()=>{ st.level=0; st.duress=false; ladderUI(); closeSheet(); setStatus(st.travel?"Travel mode":"Idle", st.travel?"on":""); log("She marked herself safe"); };
+  speak("I'm alerting your trusted contacts now. Stay where people can see you.","urgent");
+}
+function openSheet(html, danger){ $("sheet").className="sheet"+(danger?" danger":""); $("sheet").innerHTML=html; $("overlay").hidden=false; }
+function closeSheet(){ $("overlay").hidden=true; $("sheet").innerHTML=""; }
+
+$("btnCode").addEventListener("click",()=>handleSafetyWords(S.code));
+$("btnCheck").addEventListener("click",()=>startCheckIn("Manual test"));
+$("btnLate").addEventListener("click",()=>{ showTab("home"); startCheckIn(`You're usually home by ${fmtHome(S.home)}. You're late and on a route you don't usually take.`); });
+
+/* ---------- speech in ---------- */
+function makeRec(continuous){
+  if(!env.sr) return null;
+  const r=new env.sr(); r.continuous=continuous; r.interimResults=false;
+  r.lang = S.lang==="Punjabi" ? "pa-IN" : S.lang==="Hindi" ? "hi-IN" : "en-CA";
+  return r;
+}
+function onHeard(text){
+  $("heardLine").textContent="Heard: “"+text+"”";
+  if(handleSafetyWords(text)) return;
+  const wakeRe=new RegExp("\\b(hey|hi|ok)\\s+"+norm(S.name).replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+"\\b");
+  const t=norm(text);
+  if(wakeRe.test(t) || st.conv){
+    const nameRe=S.name.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
+    const rest=text.replace(new RegExp("^\\s*(hey|hi|ok)[\\s,!.]+"+nameRe+"[\\s,!.]*","i"),"").trim();
+    st.conv=true; clearTimeout(st.wake); st.wake=setTimeout(()=>st.conv=false, 20000);
+    if(rest){ showTab("talk"); send(rest);} else { speak("I'm here."); }
+  }
+}
+function startListening(){
+  if(!env.sr){ return false; }
+  st.recWanted=true;
+  const r=makeRec(true); st.rec=r;
+  r.onresult=e=>{ for(let i=e.resultIndex;i<e.results.length;i++){ if(e.results[i].isFinal) onHeard(e.results[i][0].transcript); } };
+  r.onerror=e=>{ if(e.error==="not-allowed"||e.error==="service-not-allowed"){ st.recWanted=false; env.micOK=false; envNotice(); } };
+  r.onend=()=>{ if(st.recWanted && st.travel){ setTimeout(()=>{ try{ r.start(); }catch(e){} },300); } };
+  try{ r.start(); return true; }catch(e){ return false; }
+}
+function stopListening(){ st.recWanted=false; try{ st.rec&&st.rec.stop(); }catch(e){} st.rec=null; }
+
+let pushRec=null;
+$("micBtn").addEventListener("click",()=>{
+  if(!env.sr){ envNotice(true); return; }
+  if(pushRec){ try{pushRec.stop();}catch(e){} return; }
+  const wasTravel=st.recWanted; if(wasTravel) stopListening();
+  pushRec=makeRec(false); $("micBtn").classList.add("rec");
+  pushRec.onresult=e=>{ const t=e.results[0][0].transcript; send(t); };
+  pushRec.onerror=e=>{ if(e.error==="not-allowed"){ env.micOK=false; envNotice(true);} };
+  pushRec.onend=()=>{ pushRec=null; $("micBtn").classList.remove("rec"); if(wasTravel && st.travel) startListening(); };
+  try{ pushRec.start(); }catch(e){ pushRec=null; $("micBtn").classList.remove("rec"); }
+});
+
+/* ---------- rolling 5-minute memory (RAM only) ---------- */
+async function startBuffer(){
+  if(!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) return false;
+  try{ st.stream=await navigator.mediaDevices.getUserMedia({audio:true}); }catch(e){ env.micOK=false; return false; }
+  env.micOK=true;
+  const cycle=()=>{
+    if(!st.travel||!st.stream) return;
+    const rec=new MediaRecorder(st.stream); const chunks=[];
+    rec.ondataavailable=e=>{ if(e.data.size) chunks.push(e.data); };
+    rec.onstop=()=>{ if(chunks.length){ st.segments.push(new Blob(chunks,{type:rec.mimeType})); while(st.segments.length>10) st.segments.shift(); updateBuffer(); } };
+    rec.start(); st.recorder=rec;
+    st.segTimer=setTimeout(()=>{ try{rec.stop();}catch(e){} cycle(); },30000);
+  };
+  cycle(); return true;
+}
+function stopBuffer(){ clearTimeout(st.segTimer); try{ st.recorder&&st.recorder.state!=="inactive"&&st.recorder.stop(); }catch(e){} st.stream&&st.stream.getTracks().forEach(t=>t.stop()); st.stream=null; st.segments=[]; updateBuffer(); }
+function updateBuffer(){ const s=Math.min(300,st.segments.length*30); const t=`${Math.floor(s/60)}:${String(s%60).padStart(2,"0")}`; $("statBuffer").textContent=t; $("bufInfo").textContent=st.travel?`(Holding ${t} now.)`:""; }
+
+/* ---------- location ---------- */
+function startLocation(){
+  if(!navigator.geolocation){ st.loc=DEMO_LOC; $("statLoc").textContent="Demo"; return; }
+  try{
+    st.locWatch=navigator.geolocation.watchPosition(p=>{ st.loc={lat:p.coords.latitude,lng:p.coords.longitude}; env.geoOK=true; $("statLoc").textContent="Live"; },
+      ()=>{ env.geoOK=false; st.loc=DEMO_LOC; $("statLoc").textContent="Demo"; envNotice(); }, {enableHighAccuracy:true, maximumAge:15000, timeout:20000});
+  }catch(e){ st.loc=DEMO_LOC; $("statLoc").textContent="Demo"; }
+}
+function stopLocation(){ if(st.locWatch!=null) try{ navigator.geolocation.clearWatch(st.locWatch);}catch(e){} st.locWatch=null; $("statLoc").textContent="Off"; }
+
+/* ---------- travel mode ---------- */
+let wakeLock=null;
+$("travelSwitch").addEventListener("change", async e=>{
+  st.travel=e.target.checked;
+  if(st.travel){
+    $("heroCard").classList.add("listening"); setStatus("Travel mode","on");
+    $("travelSub").textContent="On. Listening for your code word and “Hey "+S.name+"”.";
+    startLocation(); const sr=startListening(); startBuffer().then(ok=>{ if(!ok) envNotice(); });
+    if(!sr) envNotice();
+    try{ wakeLock=await navigator.wakeLock?.request("screen"); }catch(err){}
+    log("Travel mode on"); speak(`Travel mode on. I'm with you, ${S.user}.`);
+  } else {
+    $("heroCard").classList.remove("listening"); setStatus("Idle");
+    $("travelSub").textContent="Off. Nothing is listening.";
+    stopListening(); stopBuffer(); stopLocation(); try{ wakeLock&&wakeLock.release(); }catch(err){} wakeLock=null;
+    log("Travel mode off. 5-minute memory cleared");
+  }
+});
+
+/* ---------- typed "say" box ---------- */
+$("sayBtn").addEventListener("click",()=>{ const v=$("sayBox").value.trim(); if(!v) return; $("sayBox").value=""; onHeard(v); });
+$("sayBox").addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); $("sayBtn").click(); }});
+$("btnTalk").addEventListener("click",()=>{ showTab("talk"); if(!$("chat").children.length){ const g=`Hey ${S.user}! I'm ${S.name}. Where are you headed?`; bubble("ai",g); speak(g);} });
+$("btnLow").addEventListener("click",()=>{ showTab("talk"); $("modeMood").click(); });
+
+/* ---------- setup ---------- */
+function renderContacts(){
+  const box=$("contacts"); box.innerHTML="";
+  (S.contacts||[]).forEach((c,i)=>{ const row=document.createElement("div"); row.className="contact"; row.innerHTML=`<div><b></b><code></code></div><button class="btn ghost" style="padding:8px 10px">Remove</button>`; row.querySelector("b").textContent=c.name; row.querySelector("code").textContent=c.phone; row.querySelector("button").onclick=()=>{ S.contacts.splice(i,1); renderContacts(); }; box.appendChild(row); });
+}
+function loadSetup(){ fillVoices(); $("fElKey").value=S.elKey||""; $("fElVoice").value=S.elVoice||""; $("fName").value=S.name; $("fUser").value=S.user; $("fStyle").value=S.style; $("fCode").value=S.code; $("fDuress").value=S.duress; $("fHome").value=S.home; $("fLang").value=S.lang; renderContacts(); }
+$("addContact").addEventListener("click",()=>{ const n=$("cName").value.trim(), p=$("cPhone").value.trim(); if(!n||!p){ $("saveNote").textContent="Add both a name and a phone number."; return; } S.contacts.push({name:n,phone:p}); $("cName").value=""; $("cPhone").value=""; renderContacts(); $("saveNote").textContent=""; });
+$("saveSetup").addEventListener("click",()=>{
+  const code=$("fCode").value.trim(), duress=$("fDuress").value.trim();
+  if(!code||!duress){ $("saveNote").textContent="Both the code word and the duress phrase are needed."; return; }
+  if(norm(code)===norm(duress)){ $("saveNote").textContent="The code word and duress phrase must be different."; return; }
+  S.voice=$("fVoice").value; S.elKey=$("fElKey").value.trim(); S.elVoice=$("fElVoice").value.trim();
+  S.name=$("fName").value.trim()||"Sassy"; S.user=$("fUser").value.trim()||"there"; S.style=$("fStyle").value; S.code=code; S.duress=duress; S.home=$("fHome").value||"21:30"; S.lang=$("fLang").value;
+  const ok=persist(); applyNames(); $("saveNote").textContent= ok?"Saved on this phone.":"Saved for this session (this browser blocks storage).";
+});
+$("wipe").addEventListener("click",()=>{ try{ localStorage.removeItem("wemain.settings"); }catch(e){} S=Object.assign({},DEFAULTS); st.turns=[]; $("chat").innerHTML=""; stopBuffer(); applyNames(); loadSetup(); $("wipeNote").textContent="Deleted. Settings are back to the examples."; });
+
+/* ---------- environment notice ---------- */
+function envNotice(force){
+  const n=$("envNotice"); const parts=[];
+  if(!env.sr || env.micOK===false) parts.push("The mic isn't available here, so type what you'd say in the box on Home.");
+  if(env.geoOK===false || !navigator.geolocation) parts.push("Location is blocked here, so alerts use a demo location.");
+  if(env.framed) parts.push("Open the phone version in Chrome for live mic and GPS.");
+  if(parts.length && (force || env.framed || env.micOK===false || env.geoOK===false)){ n.textContent=parts.join(" "); n.hidden=false; } else n.hidden=true;
+}
+
+/* ---------- boot ---------- */
+applyNames(); loadSetup(); ladderUI(); updateBuffer();
+try{ const t=sessionStorage.getItem("wemain.tab"); if(t) showTab(t);}catch(e){}
+// sample conversation so the first view shows what it does
+bubble("sys","Example conversation");
+bubble("me",`hey ${S.name.toLowerCase()}, walking to the bus stop now`);
+bubble("ai","Got it! I'll keep you company the whole way. Tell me when you're on the bus.");
+st.turns=[];
+log("App opened");
+if(env.framed){ envNotice(true); }
+if(window.claude && typeof window.claude.use==="function"){
+  window.claude.use("sample").then(fn=>{ env.sample=fn||null; }).catch(()=>{});
+}
+if(env.tts){ try{ speechSynthesis.getVoices(); speechSynthesis.onvoiceschanged=()=>fillVoices(); }catch(e){} }
+$("testVoice").addEventListener("click",()=>{ const prev={voice:S.voice}; S.voice=$("fVoice").value; const was=st.speak; st.speak=true;
+  speak(`Hey ${S.user}! I'm ${$("fName").value||S.name}. I'm really glad you're here. How are you feeling today?`,"bright"); st.speak=was; S.voice=prev.voice; });
+})();
+</script>
+
+</body>
+</html>

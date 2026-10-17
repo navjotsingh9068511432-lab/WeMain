@@ -1,0 +1,10 @@
+{
+  "name": "WeMain",
+  "short_name": "WeMain",
+  "description": "Hands-free safety and wellbeing companion for women.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f6f1ec",
+  "theme_color": "#14262a",
+  "icons": [{"src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable"}]
+}
